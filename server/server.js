@@ -13,6 +13,9 @@ app.use(cors());
 app.use(express.json());
 
 connetedDB();
+app.get('/', (req, res) => {
+    res.send("Backend is running successfully!");
+});
 
 // Both separated routes registered here
 app.use('/api/events', eventRoutes);
