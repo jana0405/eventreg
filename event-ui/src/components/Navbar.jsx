@@ -1,34 +1,52 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom'; 
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
-  const navigate = useNavigate(); 
+
+  const role = localStorage.getItem('userRole');
+
+  const handleLogout = () => {
+    localStorage.removeItem('userRole'); 
+    window.location.href = '/';
+  };
 
   return (
-    <nav className="bg-blue-600 text-white p-4 shadow-md">
-      <div className="container mx-auto flex justify-between items-center">
+    <nav className="bg-blue-600 p-4 shadow-md text-white">
+      <div className="max-w-6xl mx-auto flex justify-between items-center">
         
-        <Link to="/events" className="text-xl font-bold">
-          EventAdmin
+        
+        <Link to={role === 'admin' ? "/manage-events" : "/events"} className="text-xl font-bold">
+          Event Registration Portal
         </Link>
-        
-        <div className="space-x-6 flex items-center">
-          <Link to="/events" className="hover:text-blue-200 transition-colors">
-            Manage Events
-          </Link>
-          <Link to="/my-registrations" className="hover:text-blue-200 transition-colors">
-            My Registrations
-          </Link>
-          
-          <button 
-            onClick={() => navigate('/login')} 
-            className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded font-medium transition-colors"
-          >
-            Logout
-          </button>
-          
-        </div>
 
+        
+        <div className="flex items-center space-x-6 font-medium">
+          
+        
+          {role === 'student' && (
+            <>
+              <Link to="/events" className="hover:text-blue-200">Browse Events</Link>
+              <Link to="/my-registrations" className="hover:text-blue-200">My Registrations</Link>
+            </>
+          )}
+
+        
+          {role === 'admin' && (
+            <>
+              <Link to="/manage-events" className="hover:text-blue-200">Manage Events</Link>
+            </>
+          )}
+
+      
+          {role && (
+            <button 
+              onClick={handleLogout} 
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm transition-colors ml-4"
+            >
+              Logout
+            </button>
+          )}
+        </div>
       </div>
     </nav>
   );

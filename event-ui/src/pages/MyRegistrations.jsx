@@ -1,77 +1,85 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import api from '../Api/Api.js';
 
 const MyRegistrations = () => {
+  const [email, setEmail] = useState("");
+  const [registrations, setRegistrations] = useState([]);
+  const [hasSearched, setHasSearched] = useState(false);
 
-  const [registrations, setRegistrations] = useState([
-    {
-      id: "REG-001",
-      studentName: "Suhas V",
-      rollNo: "23PS001",
-      eventName: "Tech Hackathon 2026",
-      status: "Confirmed"
-    },
-    {
-      id: "REG-002",
-      studentName: "Suhas V",
-      rollNo: "23PS001",
-      eventName: "Annual Cultural Fest",
-      status: "Pending"
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.get(`/registrations/student?email=${email}`);
+      setRegistrations(res.data.registrations || []);
+      setHasSearched(true);
+    } catch (error) {
+      console.log("Error fetching:", error);
     }
-  ]);
+  };
+
+  const handleCancel = async (id) => {
+    if(window.confirm("Are you sure you want to cancel your ticket?")) {
+      try {
+        await api.delete(`/registrations/${id}`);
+        setRegistrations(registrations.filter(r => r._id !== id));
+        alert("Registration cancelled.");
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
 
   return (
-    <div className='max-w-5xl mx-auto space-y-6 bg-white p-6 rounded-lg shadow-sm border border-gray-200 mt-8'>
+    <div className='max-w-4xl mx-auto mt-10 px-4'>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Find My Tickets</h1>
       
-      <div className='flex flex-col sm:flex-row justify-between items-center border-b pb-4 gap-4'>
-        <h2 className='text-2xl font-bold text-gray-800'>My Registrations</h2>
+      <form onSubmit={handleSearch} className="flex gap-4 mb-8 bg-white p-6 rounded shadow-sm border">
+        <input 
+          type="email" 
+          value={email} 
+          onChange={(e) => setEmail(e.target.value)} 
+          placeholder="Enter your student email..." 
+          required 
+          className="flex-1 border p-3 rounded focus:outline-blue-500"
+        />
+        <button type="submit" className="bg-blue-600 text-white font-bold px-6 py-3 rounded hover:bg-blue-700">
+          Search
+        </button>
+      </form>
 
-        <Link to="/events" className='bg-blue-600 hover:bg-blue-800 text-white px-5 py-2.5 rounded transition-colors'>
-          Browse Events
-        </Link>
-      </div>
-
-      <div className='overflow-x-auto border border-gray-200 rounded-md'>
-        <table className='w-full text-left border-collapse'>
-          
-          <thead>
-            <tr className='bg-gray-100 border-b border-gray-200'>
-              <th className='p-4 font-semibold text-gray-700'>Student Details</th>
-              <th className='p-4 font-semibold text-gray-700'>Event Name</th>
-              <th className='p-4 font-semibold text-gray-700'>Status</th>
-              <th className='p-4 font-semibold text-gray-700'>Actions</th>
-            </tr>
-          </thead>
-          
-          <tbody className='divide-y divide-gray-200'>
-            {registrations.length > 0 ? registrations.map((r, index) => (
-              <tr key={index} className='hover:bg-gray-50'>
-
-                <td className='p-4'>
-                  <div className='font-bold text-gray-800'>{r.studentName}</div>
-                  <div className='text-sm text-gray-500'>{r.rollNo}</div>
-                </td>
-                <td className='p-4 text-gray-800 font-medium'>{r.eventName}</td>
-                <td className='p-4'>
-                  <span className='bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold'>
-                    {r.status}
-                  </span>
-                </td>
-                <td className='p-4'>
-                  <button className='text-red-500 hover:underline font-medium text-sm'>
-                    Cancel Ticket
-                  </button>
-                </td>
+      {hasSearched && (
+        <div className="bg-white shadow-sm rounded border">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-100 border-b">
+                <th className="p-4 font-semibold text-gray-700">Student Details</th>
+                <th className="p-4 font-semibold text-gray-700">Event Name</th>
+                <th className="p-4 font-semibold text-gray-700">Actions</th>
               </tr>
-            )) : (
-              <tr>
-                <td colSpan="4" className='p-8 text-center text-gray-500'>No registrations found.</td>
-              </tr>
-            )}
-          </tbody>
-
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {registrations.length === 0 ? (
+                <tr><td colSpan="3" className="p-4 text-center text-gray-500">No registrations found for this email.</td></tr>
+              ) : (
+                registrations.map(r => (
+                  <tr key={r._id}>
+                    <td className="p-4">
+                      <p className="font-bold">{r.studentName}</p>
+                      <p className="text-sm text-gray-500">{r.rollNo}</p>
+                    </td>
+                    <td className="p-4 font-medium">{r.eventName}</td>
+                    <td className="p-4">
+                      <button onClick={() => handleCancel(r._id)} className="text-red-500 hover:text-red-700 text-sm font-semibold">
+                        Cancel Ticket
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

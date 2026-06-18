@@ -1,29 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import api from '../Api/Api.js';
 
 const AdminRegistrations = () => {
   const { eventId } = useParams();
+  const [attendees, setAttendees] = useState([]);
 
-  const [attendees, setAttendees] = useState([
-    {
-      id: "REG-001",
-      name: "Suhas V",
-      rollNo: "23PS001",
-      email: "suhas.v@university.edu",
-      phone: "9876543210",
-      department: "Physical Sciences",
-      status: "Confirmed"
-    },
-    {
-      id: "REG-002",
-      name: "Arun Kumar",
-      rollNo: "23CS045",
-      email: "arun.k@university.edu",
-      phone: "9123456780",
-      department: "Computer Science",
-      status: "Confirmed"
-    }
-  ]);
+  useEffect(() => {
+    const fetchAttendees = async () => {
+      try {
+        const res = await api.get(`/registrations/event/${eventId}`);
+        setAttendees(res.data.registrations || []);
+      } catch (error) {
+        console.log("Error fetching attendees:", error.message);
+      }
+    };
+    fetchAttendees();
+  }, [eventId]);
 
   return (
     <div className='max-w-6xl mx-auto space-y-6 bg-white p-6 rounded-lg shadow-sm border border-gray-200 mt-8'>
@@ -32,7 +25,7 @@ const AdminRegistrations = () => {
         <div>
           <h2 className='text-2xl font-bold text-gray-800'>Attendee List</h2>
           <p className='text-gray-500 text-sm mt-1'>
-            Managing registrations for Event <span className='font-bold text-blue-600'>#{eventId}</span>
+            Managing registrations for Event ID: <span className='font-bold text-blue-600'>{eventId}</span>
           </p>
         </div>
         <Link to="/events" className='text-gray-600 hover:text-gray-900 font-medium border border-gray-300 px-4 py-2 rounded transition-colors'>
@@ -51,10 +44,10 @@ const AdminRegistrations = () => {
             </tr>
           </thead>
           <tbody className='divide-y divide-gray-200'>
-            {attendees.map((student) => (
-              <tr key={student.id} className='hover:bg-gray-50 transition-colors'>
+            {attendees.length > 0 ? attendees.map((student) => (
+              <tr key={student._id} className='hover:bg-gray-50 transition-colors'>
                 <td className='p-4'>
-                  <div className='font-bold text-gray-800 text-lg'>{student.name}</div>
+                  <div className='font-bold text-gray-800 text-lg'>{student.studentName}</div>
                   <div className='text-sm text-gray-500 font-medium'>{student.rollNo}</div>
                 </td>
                 <td className='p-4'>
@@ -64,11 +57,15 @@ const AdminRegistrations = () => {
                 <td className='p-4 text-gray-700 font-medium'>{student.department}</td>
                 <td className='p-4 text-center'>
                   <span className='bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold inline-block'>
-                    {student.status}
+                    {student.Status || "Confirmed"}
                   </span>
                 </td>
               </tr>
-            ))}
+            )) : (
+              <tr>
+                <td colSpan="4" className='p-8 text-center text-gray-500'>No attendees registered for this event yet.</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
